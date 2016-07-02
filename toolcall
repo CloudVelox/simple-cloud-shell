@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+
+#
+# Copyright 2014-2016 CloudVelox Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+#
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+"""Perform python program invocation where the program and its modules
+reside in a directory named .../libexec/<program>
+"""
+
+import os
+import sys
+
+#
+# Explanation by example:
+# If
+#       sys.argv[0] == /usr/local/bin/clsh
+#  my_name : clsh
+#  my_location: /usr/local/bin
+#  my_install_location: /usr/local
+#  my_package_tree: /usr/local/libexec/clsh
+#
+my_path = os.path.abspath(sys.argv[0])
+my_name = os.path.basename(my_path)
+my_location = os.path.dirname(my_path)
+my_install_location = os.path.dirname(my_location)
+my_package_tree = os.path.join(my_install_location, "libexec", my_name)
+
+if not os.path.exists(my_package_tree):
+    print >> sys.stderr, "%s: package tree missing:" % (
+                                my_name, my_package_tree)
+    sys.exit(1)
+
+sys.path[:0] = [my_package_tree]
+try:
+    my_mod = __import__(my_name)
+except ImportError:
+    print >> sys.stderr, "Unable to find %s in %s" % (my_name, ":".join(sys.path))
+    sys.exit(1)
+
+#
+# We expect the module to have (in __init__.py) a callable object
+# with the name 'main'.
+#
+ENTRY_POINT = 'main'
+my_entry_point = getattr(my_mod, ENTRY_POINT)
+if my_entry_point is None:
+    print >> sys.stderr, "%s: module %s does not have a '%s' callable" % (
+                                my_name, my_mod, ENTRY_POINT)
+    sys.exit(1)
+
+my_entry_point()
+

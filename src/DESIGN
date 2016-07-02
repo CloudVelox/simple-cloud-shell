@@ -1,0 +1,131 @@
+#
+# Copyright 2014-2016 CloudVelox Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+#
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+----------------------------------------------------------------------
+
+The user-interface of clsh is as follows:
+
+    - reporting options are lower-case; for example,
+        vol -ta
+      will list all the volumes and their tags
+    - all commands support the same display options:
+        * <no-option>   : default output (typically, just the resource id)
+        * -l            : long output, one line per resource
+        * -x            : extended output, multiple lines per resource
+        * -t            : list resource tags
+    - for commands that report information about AWS resources, the reported
+      resources depend on the options used:
+        * -a            : all resources
+        * -f fspec      : all resources that match the filter spec
+        * -q tag_spec   : all resources that match the tag spec
+        * the resources specified, if resource ids are specified as
+          arguments
+    - modifying options are upper-case
+    - the following options letters are used in a uniform fashion:
+        -C : create some AWS resource
+        -D : delete some AWS resource
+        -S : associate two AWS resources (for example, attach a volume
+             to an instance)
+        -X : disassociate two AWS resources (for example, detach a volume
+             from an instance)
+    - commands do not nest, except when the underlying model nests.
+      An example of command nesting is the 'rds' command: the RDS
+      model defines its own notion of instances, security groups,
+      subnet groups which are separate from those of EC2.
+
+
+Option meaning:
+
+    -a                  : all resources
+    -b                  :
+    -c <class>          : identify the class of resource to create
+                                vol command: type-of-volume
+                                inst command: type-of-instance
+    -d <description>    : description for newly-created resource
+    -e                  :
+    -f spec             : filter specification
+    -g                  :
+    -h                  :
+    -i instance_id      : select resources used by instance
+    -j                  :
+    -k                  : count information
+    -l                  : long output
+    -m                  : match based on regular expression
+    -n                  : show value of Name tag in long output
+    -o order_list       : display output by first ordering resources according
+                          to order_list (commands: vol, snap)
+    -p                  :
+    -q tag_spec         : tag spec
+    -r <region>         : apply command to this region
+    -s                  : size information
+    -t                  : list tags
+    -u                  :
+    -v vpc_id           : select resources used in vpc
+    -w                  :
+    -x                  : extended output
+    -y                  :
+    -z state            : filter by state/status (commands: inst, snap, vol)
+
+    -A                  : allocate an AWS resource
+    -B                  :
+    -C                  : create an AWS resource 
+    -D                  : delete an AWS resource
+    -E                  : 
+    -F                  :
+    -G                  :
+    -H                  :
+    -I                  :
+    -J                  :
+    -K <key-name>       : name of EC2 keypair to use when launching an instance
+    -L                  :
+    -M                  :
+    -N                  :
+    -O output_path      : file where to write command output
+    -P                  :
+    -Q                  :
+    -R                  : release an AWS resource
+    -S                  :
+    -T                  : terminate an instance
+    -U                  : (user) owner list (commands: ami)
+    -V                  : allocate a VPC resource
+    -W                  :
+    -X                  : disassociate two AWS resources
+    -Y                  :
+    -Z                  : stop an instance
+
+
+The program design is as follows:
+    - there is a main program, clsh.py, which has the command
+      interpreter loop
+    - each command is implemented as a separate module; by convention the
+      module name is xxxcmd.py, where 'xxx' is the name of the command.
+      For example, volcmd.py has the implementation of the 'vol' command
+    - Each xxxcmd.py defines a class, named XxxCommand, which
+      inherits from common.ClshCommand. For example, volcmd.py defines
+      the class VolCommand.py.
+    - Each XxxCommand class must define a do_xxx() method that implements
+      the 'xxx' command. For example, the VolCommand() class defines the
+      do_vol() method. The argument to this method is the rest of the
+      line after the 'xxx' command.
+    - Each XxxCommand class must define a help_xxx() method that will
+      be invoked if the user types 'help xxx'. The argument to this
+      method is a list containing the arguments specified after the 'help'
+      command.  In the absence of this method, the 'help xxx' command
+      will print the docstring of the do_xxx() method.
+
+If you modify this program, your changes should be consistent with the
+above interface and design.
+
